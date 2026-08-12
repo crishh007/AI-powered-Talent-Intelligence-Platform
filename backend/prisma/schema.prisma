@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id      String   @id @default(cuid())
+  name    String?
+  email   String   @unique
+  student Student?
+}
+
+model Student {
+  id             String         @id @default(cuid())
+  userId         String         @unique
+  phone          String?
+  address        String?
+  university     String?
+  graduationYear Int?
+  bio            String?
+  profileImage   String?
+  applications   Application[]
+  education      Education[]
+  projects       Project[]
+  resume         Resume?
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills         StudentSkill[]
+}
+
+model Resume {
+  id         String   @id @default(cuid())
+  studentId  String   @unique
+  uploadedAt DateTime @default(now())
+  fileName   String
+  filePath   String
+  fileType   String?
+  updatedAt  DateTime @updatedAt
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model Skill {
+  id       String         @id @default(cuid())
+  name     String         @unique
+  students StudentSkill[]
+}
+
+model StudentSkill {
+  id          String  @id @default(cuid())
+  studentId   String
+  skillId     String
+  proficiency String?
+  skill       Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, skillId])
+}
+
+model Education {
+  id           String  @id @default(cuid())
+  studentId    String
+  degree       String?
+  endYear      Int?
+  fieldOfStudy String?
+  grade        String?
+  institution  String
+  startYear    Int?
+  student      Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id           String    @id @default(cuid())
+  studentId    String
+  description  String?
+  endDate      DateTime?
+  githubUrl    String?
+  projectUrl   String?
+  startDate    DateTime?
+  technologies String?
+  title        String
+  student      Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model Application {
+  id          String            @id @default(cuid())
+  studentId   String
+  jobTitle    String
+  companyName String
+  status      ApplicationStatus @default(APPLIED)
+  appliedAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  student     Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+enum ApplicationStatus {
+  APPLIED
+  SHORTLISTED
+  INTERVIEW
+  SELECTED
+  REJECTED
+  WITHDRAWN
+}
