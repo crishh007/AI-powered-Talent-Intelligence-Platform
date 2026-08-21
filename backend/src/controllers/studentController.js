@@ -1,5 +1,6 @@
 const prisma = require("../lib/prisma");
-
+const fs = require("fs");
+const path = require("path");
 // =====================================================
 // PROFILE
 // =====================================================
@@ -140,7 +141,6 @@ const addStudentSkill = async (req, res) => {
       });
     }
 
-    // Find existing skill or create a new one
     const skill = await prisma.skill.upsert({
       where: {
         name,
@@ -151,7 +151,6 @@ const addStudentSkill = async (req, res) => {
       },
     });
 
-    // Check if student already has this skill
     const existingStudentSkill = await prisma.studentSkill.findUnique({
       where: {
         studentId_skillId: {
@@ -468,9 +467,8 @@ const deleteStudentEducation = async (req, res) => {
 
 
 // =====================================================
-// EXPORTS
+// PROJECTS
 // =====================================================
-// ==================== PROJECTS ====================
 
 // Get Student Projects
 const getStudentProjects = async (req, res) => {
@@ -652,7 +650,360 @@ const deleteStudentProject = async (req, res) => {
     });
   }
 };
+// =====================================================
+// RESUME
+// =====================================================
+
+
+
+
+// Get Student Resume
+const getStudentResume = async (req, res) => {
+  try {
+    const studentId = req.user.studentId;
+
+    const resume = await prisma.resume.findUnique({
+      where: {
+        studentId,
+      },
+    });
+
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: "Resume not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: resume,
+    });
+  } catch (error) {
+    console.error("Get student resume error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch student resume",
+    });
+  }
+};
+
+
+// Upload / Replace Student Resume
+const uploadStudentResume = async (req, res) => {
+  try {
+    const studentId = req.user.studentId;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Resume file is required",
+      });
+    }
+
+    const existingResume = await prisma.resume.findUnique({
+      where: {
+        studentId,
+      },
+    });
+
+    const resumeData = {
+      studentId,
+      fileName: req.file.originalname,
+      filePath: req.file.path,
+      fileType: req.file.mimetype,
+    };
+
+    const resume = await prisma.resume.upsert({
+      where: {
+        studentId,
+      },
+      update: {
+        fileName: resumeData.fileName,
+        filePath: resumeData.filePath,
+        fileType: resumeData.fileType,
+      },
+      create: resumeData,
+    });
+
+    // Delete old physical file after successful database update
+    if (existingResume && existingResume.filePath) {
+      try {
+        if (fs.existsSync(existingResume.filePath)) {
+          fs.unlinkSync(existingResume.filePath);
+        }
+      } catch (fileError) {
+        console.error("Failed to delete old resume file:", fileError);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: existingResume
+        ? "Resume updated successfully"
+        : "Resume uploaded successfully",
+      data: resume,
+    });
+  } catch (error) {
+    console.error("Upload student resume error:", error);
+
+    // Remove newly uploaded file if database operation failed
+    if (req.file?.path) {
+      try {
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+      } catch (fileError) {
+        console.error("Failed to remove uploaded file:", fileError);
+      }
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to upload student resume",
+    });
+  }
+};
+
+
+// Delete Student Resume
+const deleteStudentResume = async (req, res) => {
+  try {
+    const studentId = req.user.studentId;
+
+    const resume = await prisma.resume.findUnique({
+      where: {
+        studentId,
+      },
+    });
+
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: "Resume not found",
+      });
+    }
+
+    await prisma.resume.delete({
+      where: {
+        studentId,
+      },
+    });
+
+    // Delete physical resume file
+    if (resume.filePath) {
+      try {
+        if (fs.existsSync(resume.filePath)) {
+          fs.unlinkSync(resume.filePath);
+        }
+      } catch (fileError) {
+        console.error("Failed to delete resume file:", fileError);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Resume deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete student resume error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete student resume",
+    });
+  }
+};
+
+// =====================================================
+// APPLICATIONS
+// =====================================================
+
+// Get Student Applications
+const getStudentApplications = async (req, res) => {
+  try {
+    const studentId = req.user.studentId;
+
+    const applications = await prisma.application.findMany({
+      where: {
+        studentId,
+      },
+      orderBy: {
+        appliedAt: "desc",
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: applications,
+    });
+  } catch (error) {
+    console.error("Get student applications error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch student applications",
+    });
+  }
+};
+
+
+// Add Student Application
+const addStudentApplication = async (req, res) => {
+  try {
+    const studentId = req.user.studentId;
+
+    const {
+      jobTitle,
+      companyName,
+      status,
+    } = req.body;
+
+    if (!jobTitle) {
+      return res.status(400).json({
+        success: false,
+        message: "Job title is required",
+      });
+    }
+
+    if (!companyName) {
+      return res.status(400).json({
+        success: false,
+        message: "Company name is required",
+      });
+    }
+
+    const application = await prisma.application.create({
+      data: {
+        studentId,
+        jobTitle,
+        companyName,
+        status: status || "APPLIED",
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Application added successfully",
+      data: application,
+    });
+  } catch (error) {
+    console.error("Add student application error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to add student application",
+    });
+  }
+};
+
+
+// Update Student Application
+const updateStudentApplication = async (req, res) => {
+  try {
+    const studentId = req.user.studentId;
+    const applicationId = req.params.id;
+
+    const {
+      jobTitle,
+      companyName,
+      status,
+    } = req.body;
+
+    const existingApplication = await prisma.application.findFirst({
+      where: {
+        id: applicationId,
+        studentId,
+      },
+    });
+
+    if (!existingApplication) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+
+    const application = await prisma.application.update({
+      where: {
+        id: applicationId,
+      },
+      data: {
+        jobTitle,
+        companyName,
+        status,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Application updated successfully",
+      data: application,
+    });
+  } catch (error) {
+    console.error("Update student application error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to update student application",
+    });
+  }
+};
+
+
+// Delete Student Application
+const deleteStudentApplication = async (req, res) => {
+  try {
+    const studentId = req.user.studentId;
+    const applicationId = req.params.id;
+
+    const existingApplication = await prisma.application.findFirst({
+      where: {
+        id: applicationId,
+        studentId,
+      },
+    });
+
+    if (!existingApplication) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+
+    await prisma.application.delete({
+      where: {
+        id: applicationId,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Application deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete student application error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete student application",
+    });
+  }
+};
+
+
+// =====================================================
+// EXPORTS
+// =====================================================
+
 module.exports = {
+
+  // Resume
+  getStudentResume,
+  uploadStudentResume,
+  deleteStudentResume,
+  
   // Profile
   getStudentProfile,
   updateStudentProfile,
@@ -669,13 +1020,15 @@ module.exports = {
   updateStudentEducation,
   deleteStudentEducation,
 
-  getStudentEducation,
-  addStudentEducation,
-  updateStudentEducation,
-  deleteStudentEducation,
-
+  // Projects
   getStudentProjects,
   addStudentProject,
   updateStudentProject,
   deleteStudentProject,
+
+  // Applications
+  getStudentApplications,
+  addStudentApplication,
+  updateStudentApplication,
+  deleteStudentApplication,
 };

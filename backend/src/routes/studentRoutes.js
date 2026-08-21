@@ -18,9 +18,16 @@ const {
   addStudentProject,
   updateStudentProject,
   deleteStudentProject,
+
+  getStudentResume,
+  uploadStudentResume,
+  deleteStudentResume,
+
+  getStudentApplications,
 } = require("../controllers/studentController");
 
 const studentAuth = require("../middleware/studentAuth");
+const uploadResume = require("../middleware/upload");
 
 const router = express.Router();
 
@@ -52,5 +59,25 @@ router.get("/projects", getStudentProjects);
 router.post("/projects", addStudentProject);
 router.put("/projects/:id", updateStudentProject);
 router.delete("/projects/:id", deleteStudentProject);
+
+// ==================== RESUME ====================
+
+// Get current resume
+router.get("/resume", getStudentResume);
+
+// Upload / Replace resume
+router.post(
+  "/resume",
+  uploadResume.single("resume"),
+  uploadStudentResume
+);
+
+// Delete resume
+router.delete("/resume", deleteStudentResume);
+
+// ==================== APPLICATIONS ====================
+
+// Get student's application history
+router.get("/applications", getStudentApplications);
 
 module.exports = router;
