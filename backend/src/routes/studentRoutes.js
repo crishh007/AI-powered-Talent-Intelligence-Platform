@@ -24,6 +24,9 @@ const {
   deleteStudentResume,
 
   getStudentApplications,
+  addStudentApplication,
+updateStudentApplication,
+deleteStudentApplication,
 } = require("../controllers/studentController");
 
 const studentAuth = require("../middleware/studentAuth");
@@ -80,4 +83,12 @@ router.delete("/resume", deleteStudentResume);
 // Get student's application history
 router.get("/applications", getStudentApplications);
 
+// Add new application
+router.post("/applications", addStudentApplication);
+
+// Update application
+router.put("/applications/:id", updateStudentApplication);
+
+// Delete application
+router.delete("/applications/:id", deleteStudentApplication);
 module.exports = router;
