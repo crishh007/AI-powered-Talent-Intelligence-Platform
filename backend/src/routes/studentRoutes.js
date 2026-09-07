@@ -29,13 +29,15 @@ updateStudentApplication,
 deleteStudentApplication,
 } = require("../controllers/studentController");
 
-const studentAuth = require("../middleware/studentAuth");
+const authenticateToken = require("../middleware/authMiddleware");
+const studentAuthJwt = require("../middleware/studentAuthJwt");
 const uploadResume = require("../middleware/upload");
 
 const router = express.Router();
 
 // Temporary student authentication
-router.use(studentAuth);
+router.use(authenticateToken);
+router.use(studentAuthJwt);
 
 // ==================== PROFILE ====================
 
