@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #f0eeff;
+  --color-brand-100: #e1dcfe;
+  --color-brand-200: #c6bbfd;
+  --color-brand-300: #a390fb;
+  --color-brand-400: #815ef7;
+  --color-brand-500: #6D5DF6;
+  --color-brand-600: #583ef0;
+  --color-brand-700: #4627dc;
+  --color-brand-800: #3a20b7;
+  --color-brand-900: #311c92;
+  --color-brand-950: #1c0e62;
+  --color-primary: #6D5DF6;
+  --color-secondary: #3B82F6;
+  --color-accent: #06B6D4;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-darkSidebar: #111827;
+  --color-bgMain: #F8FAFC;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: #F8FAFC;
+    color: #111827;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Custom Glassmorphism & SaaS Gradients */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.gradient-btn {
+  background: linear-gradient(135deg, #6D5DF6 0%, #3B82F6 100%);
+}
+
+.gradient-btn:hover {
+  background: linear-gradient(135deg, #583ef0 0%, #2563eb 100%);
+  box-shadow: 0 8px 20px -4px rgba(109, 93, 246, 0.4);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #6D5DF6 0%, #3B82F6 50%, #06B6D4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

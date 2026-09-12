@@ -1,0 +1,78 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { authService } from '../../services/authService';
+import { useNotification } from '../../context/NotificationContext';
+import { Sparkles, Mail, ArrowRight } from 'lucide-react';
+
+const ForgotPasswordPage = () => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { addToast } = useNotification();
+  const navigate = useNavigate();
+
+  const handleSendOTP = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await authService.sendOTP(email);
+      addToast(res.message, 'success');
+      navigate(`/auth/otp?email=${encodeURIComponent(email)}`);
+    } catch (err) {
+      addToast(err.message || 'Error sending OTP', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] px-4 py-12">
+      <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-gray-100 space-y-6">
+        <div className="text-center space-y-2">
+          <Link to="/" className="inline-flex items-center gap-2 group mb-2">
+            <div className="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center shadow-md">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-extrabold text-xl text-gray-900 tracking-tight">
+              Talent<span className="gradient-text">Intel AI</span>
+            </span>
+          </Link>
+          <h2 className="text-2xl font-extrabold text-gray-900">Forgot Password?</h2>
+          <p className="text-xs text-gray-500">Enter your email to receive a 6-digit OTP verification code</p>
+        </div>
+
+        <form onSubmit={handleSendOTP} className="space-y-4">
+          <div>
+            <label className="text-xs font-bold text-gray-700 block mb-1">Email Address</label>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="alex@example.com"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-brand-500 outline-none"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-xl text-sm font-bold text-white gradient-btn shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+          >
+            {loading ? 'Sending Code...' : 'Send OTP Code'} <ArrowRight className="w-4 h-4" />
+          </button>
+        </form>
+
+        <div className="text-center pt-2">
+          <Link to="/login" className="text-xs font-bold text-gray-500 hover:text-gray-900">
+            ← Back to Sign In
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ForgotPasswordPage;

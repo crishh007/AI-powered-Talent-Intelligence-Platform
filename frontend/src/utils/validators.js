@@ -1,0 +1,14 @@
+export const validateEmail = (email) => {
+  const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return re.test(String(email).toLowerCase());
+};
+
+export const validatePassword = (password) => {
+  
+  return password && password.length >= 6;
+};
+
+export const validateRequired = (val) => {
+  if (typeof val === 'string') return val.trim().length > 0;
+  return val !== null && val !== undefined;
+};
